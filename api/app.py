@@ -90,7 +90,7 @@ def subtract_funds():
 
     return f"{json['amount']} taken from account {json['recipientId']}"
 
-@app.route("/mikuapi/bank/transfer")
+@app.route("/mikuapi/bank/transfer", methods= [ 'POST' ])
 def transfer():
     json = request.json
     conn = sqlite.connect("miku.db")

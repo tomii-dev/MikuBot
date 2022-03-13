@@ -1,2 +1,3 @@
 # MikuBot
-a discord bot
+
+a feature rich discord bot written in c#, complete with voice recognition,

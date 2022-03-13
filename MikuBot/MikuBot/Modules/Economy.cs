@@ -52,14 +52,18 @@ namespace MikuBot.Modules
             await Database.CreateAccount(Context.User as IGuildUser);
             await ReplyAsync("**every new member of *MikuBank* gets a starting fund of 50 MikuCoin!**");
             await Extras.LoadingMessage("adding funds", Context, 1);
-            await ReplyAsync("account created!");
+            await ReplyAsync(
+                $"account created! your account number is **{Context.User.Id}**. " +
+                $"others will need this to make transfers to your account!");
+            await ReplyAsync($"you can view your account number at any point " +
+                $"using {Database.GetGuildPrefix(Context.Guild.Id.ToString()).Result}bakance");
         }
 
         [Command("transfer", RunMode=RunMode.Async)]
-        public async Task Transfer(int amount, SocketGuildUser target)
+        public async Task Transfer(int amount, string targetId)
         {
-            await Database.Transfer(Context.User as IGuildUser, target as IGuildUser, amount);
-            await ReplyAsync($"**${amount}** transferred to {target.Username}'s account!");
+            await Database.Transfer(Context.User as IGuildUser, targetId, amount);
+            await ReplyAsync($"**${amount}** transferred to {_client.GetUserAsync(Convert.ToUInt64(targetId)).Result.Username}'s account!");
         }
     }
 }

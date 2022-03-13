@@ -7,13 +7,10 @@ namespace MikuBot.Services
 {
     class TransactionInfo
     {
-        [JsonPropertyName("senderId")]
-        public string SenderId { get; set; }
+        public string senderId { get; set; }
 
-        [JsonPropertyName("recipientId")]
-        public string RecipientId { get; set; }
+        public string recipientId { get; set; }
 
-        [JsonPropertyName("amount")]
-        public int Amount { get; set; }
+        public int amount { get; set; }
     }
 }

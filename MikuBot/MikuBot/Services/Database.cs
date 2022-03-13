@@ -52,8 +52,6 @@ namespace MikuBot.Services
             var content = new StringContent(
                 json, Encoding.UTF8, "application/json");
             await _client.PostAsync($"{_apiUrl}/addguild", content);
-
-            IDictionary<string, string> userDict = new Dictionary<string, string>();
         }
 
         public static async Task RemoveGuild(IGuild guild)
@@ -76,7 +74,7 @@ namespace MikuBot.Services
         public static async Task AddFunds(IGuildUser user, int amount)
         {
             TransactionInfo info = new TransactionInfo() { 
-                RecipientId = user.Id.ToString(), Amount = amount };
+                recipientId = user.Id.ToString(), amount = amount };
             var json = JsonConvert.SerializeObject(info, Formatting.Indented);
             var content = new StringContent(
                 json, Encoding.UTF8, "application/json");
@@ -86,22 +84,22 @@ namespace MikuBot.Services
         public static async Task SubtractFunds(IGuildUser user, int amount)
         {
             TransactionInfo info = new TransactionInfo(){
-                RecipientId = user.Id.ToString(), Amount = amount*-1};
+                recipientId = user.Id.ToString(), amount = amount*-1};
             var json = JsonConvert.SerializeObject(info, Formatting.Indented);
             var content = new StringContent(
                 json, Encoding.UTF8, "application/json");
             await _client.PostAsync($"{_apiUrl}/bank/subtractfunds", content);
         }
 
-        public static async Task Transfer(IGuildUser sender, IGuildUser recipient, int amount)
+        public static async Task Transfer(IGuildUser sender, string recipientId, int amount)
         {
             TransactionInfo info = new TransactionInfo()
             {
-                SenderId = sender.Id.ToString(),
-                RecipientId = recipient.Id.ToString(),
-                Amount = amount
+                senderId = sender.Id.ToString(),
+                recipientId = recipientId,
+                amount = amount
             };
-            var json = JsonConvert.SerializeObject(info, Formatting.Indented);
+            var json = JsonConvert.SerializeObject(info);
             var content = new StringContent(
                 json, Encoding.UTF8, "application/json");
             await _client.PostAsync($"{_apiUrl}/bank/transfer", content);
