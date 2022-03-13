@@ -1,0 +1,45 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Utils.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Discord.Net" Version="3.4.0" />
+    <PackageReference Include="libsodium" Version="1.0.18.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
+    <PackageReference Include="Opus" Version="1.0.0" />
+    <PackageReference Include="System.Speech" Version="6.0.0" />
+    <PackageReference Include="YoutubeExplode" Version="6.1.0" />
+    <PackageReference Include="YoutubeExplode.Converter" Version="6.1.0" />
+    <PackageReference Include="YouTubeSearch" Version="2.2.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Config.cs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Media\voiceClips\sup.mp3">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="miku.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Data\" />
+    <Folder Include="Media\" />
+    <Folder Include="NewFolder2\" />
+    <Folder Include="NewFolder\" />
+  </ItemGroup>
+
+</Project>
