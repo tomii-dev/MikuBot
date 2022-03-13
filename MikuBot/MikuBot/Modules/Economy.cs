@@ -62,6 +62,11 @@ namespace MikuBot.Modules
         [Command("transfer", RunMode=RunMode.Async)]
         public async Task Transfer(int amount, string targetId)
         {
+            if(Int32.Parse(Database.GetBalance(Context.User as IGuildUser).Result) - amount < 0)
+            {
+                await ReplyAsync("insufficient funds :/");
+                return;
+            }
             await Database.Transfer(Context.User as IGuildUser, targetId, amount);
             await ReplyAsync($"**${amount}** transferred to {_client.GetUserAsync(Convert.ToUInt64(targetId)).Result.Username}'s account!");
         }
