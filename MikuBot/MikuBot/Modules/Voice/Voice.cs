@@ -81,7 +81,7 @@ namespace MikuBot.Modules.Voice
         }
 
         [Command("play", RunMode=RunMode.Async)]
-        public async Task Play(string searchCriteria = null)
+        public async Task Play([Remainder]string searchCriteria)
         {
             var items = new VideoSearch();
             var video = items.GetVideos(searchCriteria, 1).Result[0];
@@ -111,18 +111,30 @@ namespace MikuBot.Modules.Voice
                     stream = await youtube.Videos.Streams.GetAsync(Queue.GetCurrentQueue().GetNextStream());
                 }catch(Exception e) { Console.WriteLine(e.ToString());  }
 
+                bool songPlaying = Queue.GetCurrentQueue().GetCurrentStream() != null;
+
                 // song info embed
                 var embed = new EmbedBuilder();
-                embed.Title = title;
-                embed.ThumbnailUrl = thumbnail;
-                embed.Description = "♬♫♪◖(●。●)◗♪♫♬";
-                embed.AddField("channel", $"playing in {_channel.Name}!");
+                if (songPlaying) {
+                    int queueCount = Queue.GetCurrentQueue().GetCount();
+                    embed.Title = "song added to queue!";
+                    embed.ThumbnailUrl = thumbnail;
+                    embed.AddField("title", title);
+                    embed.AddField("position", $"{queueCount}/{queueCount} in queue");
+                }
+                else
+                {
+                    embed.Title = title;
+                    embed.ThumbnailUrl = thumbnail;
+                    embed.Description = "♬♫♪◖(●。●)◗♪♫♬";
+                    embed.AddField("channel", $"playing in {_channel.Name}!");
+                }
+
                 embed.WithColor(Color.Blue);
+
                 var message = await ReplyAsync("", false, embed.Build());
 
-                if (Queue.GetCurrentQueue().GetCurrentStream() != null) return;
-
-                Console.WriteLine("GOT HERE MF");
+                if (songPlaying) return;
 
                 try
                 {
@@ -145,12 +157,11 @@ namespace MikuBot.Modules.Voice
                     }
                 }
             }
-
-            Console.WriteLine("UMMM");
         }
 
         private static async Task StartListenService(ulong user, AudioInStream inStream)
         {
+            Console.WriteLine("started");
             var source = new CancellationTokenSource();
             if(cancel.TryAdd(user, source))
             {
