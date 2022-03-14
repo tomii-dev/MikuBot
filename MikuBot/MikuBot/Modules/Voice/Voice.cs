@@ -92,19 +92,23 @@ namespace MikuBot.Modules.Voice
             var streamManifest = await youtube.Videos.Streams.GetManifestAsync(url);
             var streamInfo = streamManifest.GetAudioOnlyStreams().GetWithHighestBitrate();
 
-            if (_currentQueue == null) _currentQueue = new Queue();
-            _currentQueue.AddStream(streamInfo);
+            if (Queue.GetCurrentQueue() == null) {
+                _currentQueue = new Queue();
+                _currentQueue.AddStream(streamInfo);
+                Queue.SetCurrentQueue(_currentQueue);
+            }
+            else Queue.GetCurrentQueue().AddStream(streamInfo);
 
             if (_audioClient == null) await JoinChannel();
 
-            while (!_currentQueue.IsEmpty())
+            while (!Queue.GetCurrentQueue().IsEmpty())
             {
-                Console.WriteLine(_currentQueue.GetCount());
+                Console.WriteLine(Queue.GetCurrentQueue().GetCount());
                 var memoryStream = new MemoryStream();
                 Stream stream = null;
                 try
                 {
-                    stream = await youtube.Videos.Streams.GetAsync(_currentQueue.GetCurrentStream());
+                    stream = await youtube.Videos.Streams.GetAsync(Queue.GetCurrentQueue().GetNextStream());
                 }catch(Exception e) { Console.WriteLine(e.ToString());  }
 
                 // song info embed
@@ -116,7 +120,9 @@ namespace MikuBot.Modules.Voice
                 embed.WithColor(Color.Blue);
                 var message = await ReplyAsync("", false, embed.Build());
 
-                if (_currentStream != null) return;
+                if (Queue.GetCurrentQueue().GetCurrentStream() != null) return;
+
+                Console.WriteLine("GOT HERE MF");
 
                 try
                 {
@@ -129,13 +135,13 @@ namespace MikuBot.Modules.Voice
 
                 using (var discord = _audioClient.CreatePCMStream(AudioApplication.Mixed))
                 {
-                    _currentStream = discord;
+                    Queue.GetCurrentQueue().SetCurrentStream();
                     try { await discord.WriteAsync(memoryStream.ToArray(), 0, (int)memoryStream.Length); }
                     finally
                     {
                         await message.DeleteAsync();
-                        _currentQueue.Dequeue();
-                        _currentStream = null;
+                        Queue.GetCurrentQueue().Dequeue();
+                        Queue.GetCurrentQueue().SetCurrentStreamNull();
                     }
                 }
             }

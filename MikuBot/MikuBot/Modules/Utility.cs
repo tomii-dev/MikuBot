@@ -31,5 +31,11 @@ namespace MikuBot.Modules
             embed.WithColor(Color.Blue);
             await ReplyAsync("", false, embed.Build());
         }
+
+        [Command("help", RunMode=RunMode.Async)]
+        public async Task Help()
+        {
+
+        }
     }
 }
