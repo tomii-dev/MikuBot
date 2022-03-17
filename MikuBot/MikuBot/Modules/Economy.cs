@@ -34,6 +34,7 @@ namespace MikuBot.Modules
             embed.Title = $"{Context.User.Username}'s account";
             embed.ThumbnailUrl = Context.User.GetAvatarUrl();
             embed.AddField("balance", $"$^-^{balance}");
+            embed.AddField("account number", Context.User.Id.ToString());
             embed.WithColor(Color.Blue);
             await ReplyAsync("", false, embed.Build());
         }
@@ -69,6 +70,13 @@ namespace MikuBot.Modules
             }
             await Database.Transfer(Context.User as IGuildUser, targetId, amount);
             await ReplyAsync($"**${amount}** transferred to {_client.GetUserAsync(Convert.ToUInt64(targetId)).Result.Username}'s account!");
+        }
+
+        [Command("shop", RunMode=RunMode.Async)]
+        public async Task Shop()
+        {
+            var embed = new Discord.EmbedBuilder();
+            embed.Title = "today's shop";
         }
     }
 }

@@ -19,6 +19,12 @@ namespace MikuBot.Services
         private static readonly HttpClient _client = new HttpClient();
         private static DiscordSocketClient _dClient;
         private static string _apiUrl = "http://127.0.0.1:5000/mikuapi";
+        public static async Task<bool> CheckApi()
+        {
+            var check = _client.GetAsync(_apiUrl);
+            if (await Task.WhenAny(check, Task.Delay(100)) == check) return true;
+            else return false;
+        }
         public static async Task<string> GetGuildPrefix(string id)
         {
             var response = await _client.GetAsync($"{_apiUrl}/getprefix/{id}");

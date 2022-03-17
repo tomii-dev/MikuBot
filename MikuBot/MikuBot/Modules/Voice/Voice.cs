@@ -161,7 +161,6 @@ namespace MikuBot.Modules.Voice
 
         private static async Task StartListenService(ulong user, AudioInStream inStream)
         {
-            Console.WriteLine("started");
             var source = new CancellationTokenSource();
             if(cancel.TryAdd(user, source))
             {

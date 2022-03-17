@@ -34,9 +34,15 @@ namespace MikuBot.Services
 
                 if (rawMsg.Author.IsBot) return;
 
-                var chnl = msg.Channel as SocketGuildChannel;
+                if (!Database.CheckApi().Result)
+                {
+                    Console.WriteLine("man wtf");
+                    await _client.SetStatusAsync(Discord.UserStatus.AFK);
+                    await _client.SetGameAsync("data api offline :/");
+                    return;
+                }
 
-                Console.WriteLine(Database.GetGuildPrefix(chnl.Guild.Id.ToString()).Result[0]);
+                var chnl = msg.Channel as SocketGuildChannel;
 
                 char prefix = Database.GetGuildPrefix(chnl.Guild.Id.ToString()).Result[0];
 

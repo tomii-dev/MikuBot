@@ -34,6 +34,8 @@ namespace MikuBot
 
             await services.GetRequiredService<CommandHandler>().InitialiseAsync();
 
+            await Extras.StatusLoop(_client);
+
             await Task.Delay(-1);
         }
 
