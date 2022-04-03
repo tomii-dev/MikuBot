@@ -36,7 +36,6 @@ namespace MikuBot.Services
 
                 if (!Database.CheckApi().Result)
                 {
-                    Console.WriteLine("man wtf");
                     await _client.SetStatusAsync(Discord.UserStatus.AFK);
                     await _client.SetGameAsync("data api offline :/");
                     return;

@@ -77,6 +77,7 @@ namespace MikuBot.Modules.Voice
         {
             if (_channel == null) return;
             _currentQueue = null;
+            Queue.SetCurrentQueue(_currentQueue);
             await _channel.DisconnectAsync();
         }
 
