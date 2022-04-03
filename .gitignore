@@ -2,3 +2,5 @@ MikuBot/.vs/
 MikuBot/MikuBot/bin/
 MikuBot/MikuBot/obj/
 MikuBot/MikuBot/miku.json
+MikuBot/Backup/
+*.htm
