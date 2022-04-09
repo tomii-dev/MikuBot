@@ -31,7 +31,7 @@ namespace MikuBot.Modules.Voice
         private static AudioOutStream _currentStream = null;
         private static ConcurrentDictionary<ulong, CancellationTokenSource> cancel = new ConcurrentDictionary<ulong, CancellationTokenSource>();
         private static ICommandContext _context;
-
+        
         private Queue _currentQueue = null;
 
         public Voice(IServiceProvider services)
@@ -59,11 +59,12 @@ namespace MikuBot.Modules.Voice
             var audioClient = await channel.ConnectAsync();
             _audioClient = audioClient;
 
-            using(var ffmpeg = FFmpeg.CreateStream(@"Media\voiceClips\sup.mp3"))
-            using(var output = ffmpeg.StandardOutput.BaseStream)
-            using(var discord = audioClient.CreatePCMStream(AudioApplication.Mixed))
+            using (var ffmpeg = FFmpeg.CreateStream(@"Media/voiceClips/sup.mp3"))
+            using (var output = ffmpeg.StandardOutput.BaseStream)
+            using (var discord = audioClient.CreatePCMStream(AudioApplication.Mixed))
             {
                 try { await output.CopyToAsync(discord); }
+                catch(Exception e) { Console.WriteLine(e);}
                 finally { await discord.FlushAsync(); }
             }
 
