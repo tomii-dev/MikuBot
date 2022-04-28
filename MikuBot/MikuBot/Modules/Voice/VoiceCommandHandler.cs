@@ -31,7 +31,7 @@ namespace MikuBot.Modules.Voice
                     }
                 case "miku fuck off":
                     {
-                        Voice.GetChannel().DisconnectAsync();
+                        Voice.GetChannel(_context.Guild.Id).DisconnectAsync();
                         break;
                     }
             }

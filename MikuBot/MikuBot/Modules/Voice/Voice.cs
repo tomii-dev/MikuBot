@@ -25,23 +25,37 @@ namespace MikuBot.Modules.Voice
 {
     class Voice : ModuleBase
     {
+        private struct VoiceChannel
+        {
+            public IVoiceChannel Channel { get; set; }
+            public IAudioClient AudioClient { get; set; }
+            public VoiceChannel(IVoiceChannel channel, IAudioClient client)
+            {
+                Channel = channel;
+                AudioClient = client;
+            }
+        }
+
         private static DiscordSocketClient _client;
-        private static IVoiceChannel _channel = null;
-        private static IAudioClient _audioClient = null;
+        private static Dictionary<ulong, VoiceChannel> _channels;
         private static AudioOutStream _currentStream = null;
-        private static ConcurrentDictionary<ulong, CancellationTokenSource> cancel = new ConcurrentDictionary<ulong, CancellationTokenSource>();
+        private static ConcurrentDictionary<ulong, CancellationTokenSource> cancel;
         private static ICommandContext _context;
-        
-        private Queue _currentQueue = null;
+
+        static Voice()
+        {
+            _channels = new Dictionary<ulong, VoiceChannel>();
+        }
 
         public Voice(IServiceProvider services)
         {
             _client = services.GetRequiredService<DiscordSocketClient>();
+            cancel = new ConcurrentDictionary<ulong, CancellationTokenSource>();
         }
 
-        public static IVoiceChannel GetChannel()
+        public static IVoiceChannel GetChannel(ulong guildId)
         {
-            return _channel;
+            return _channels[guildId].Channel;
         }
 
         [Command("join", RunMode=RunMode.Async)]
@@ -54,10 +68,15 @@ namespace MikuBot.Modules.Voice
                 return;
             }
 
-            _channel = channel;
+            IAudioClient audioClient = null;
+            if (_channels.ContainsKey(Context.Guild.Id))
+            {
+                if (_channels[Context.Guild.Id].Channel == channel) return;
 
-            var audioClient = await channel.ConnectAsync();
-            _audioClient = audioClient;
+            }else audioClient = await channel.ConnectAsync();
+                
+            VoiceChannel voiceChannel = new VoiceChannel(channel, audioClient);
+            _channels[Context.Guild.Id] = voiceChannel;
 
             using (var ffmpeg = FFmpeg.CreateStream(@"Media/voiceClips/sup.mp3"))
             using (var output = ffmpeg.StandardOutput.BaseStream)
@@ -76,49 +95,49 @@ namespace MikuBot.Modules.Voice
         [Command("leave", RunMode=RunMode.Async)]
         public async Task LeaveChannel()
         {
-            if (_channel == null) return;
-            _currentQueue = null;
-            Queue.SetCurrentQueue(_currentQueue);
-            await _channel.DisconnectAsync();
+            if (!_channels.ContainsKey(Context.Guild.Id))
+                return;
+            await _channels[Context.Guild.Id].Channel.DisconnectAsync();
+            _channels.Remove(Context.Guild.Id);
         }
 
         [Command("play", RunMode=RunMode.Async)]
         public async Task Play([Remainder]string searchCriteria)
         {
-            var items = new VideoSearch();
-            var video = items.GetVideos(searchCriteria, 1).Result[0];
-            var url = video.getUrl();
-            var thumbnail = video.getThumbnail();
-            var title = video.getTitle();
-            var youtube = new YoutubeClient();
-            var streamManifest = await youtube.Videos.Streams.GetManifestAsync(url);
-            var streamInfo = streamManifest.GetAudioOnlyStreams().GetWithHighestBitrate();
+            Console.WriteLine("mhm");
+            VideoSearch items = new VideoSearch();
+            VideoSearchComponents video = items.GetVideos(searchCriteria, 1).Result[0];
+            string url = video.getUrl();
+            string thumbnail = video.getThumbnail();
+            string title = video.getTitle();
+            YoutubeClient youtube = new YoutubeClient();
+            StreamManifest streamManifest = await youtube.Videos.Streams.GetManifestAsync(url);
+            IStreamInfo streamInfo = streamManifest.GetAudioOnlyStreams().GetWithHighestBitrate();
 
-            if (Queue.GetCurrentQueue() == null) {
-                _currentQueue = new Queue();
-                _currentQueue.AddStream(streamInfo);
-                Queue.SetCurrentQueue(_currentQueue);
+            if (!Queue.QueueExists(Context.Guild.Id)){
+                Console.WriteLine("bruh");
+                Queue queue = new Queue(Context.Guild.Id);
+                queue.AddStream(streamInfo);
             }
-            else Queue.GetCurrentQueue().AddStream(streamInfo);
+            else Queue.GetQueue(Context.Guild.Id).AddStream(streamInfo);
 
-            if (_audioClient == null) await JoinChannel();
+            if (!_channels.ContainsKey(Context.Guild.Id)) await JoinChannel();
 
-            while (!Queue.GetCurrentQueue().IsEmpty())
+            while (!Queue.GetQueue(Context.Guild.Id).IsEmpty())
             {
-                Console.WriteLine(Queue.GetCurrentQueue().GetCount());
-                var memoryStream = new MemoryStream();
+                MemoryStream memoryStream = new MemoryStream();
                 Stream stream = null;
                 try
                 {
-                    stream = await youtube.Videos.Streams.GetAsync(Queue.GetCurrentQueue().GetNextStream());
-                }catch(Exception e) { Console.WriteLine(e.ToString());  }
+                    stream = await youtube.Videos.Streams.GetAsync(Queue.GetQueue(Context.Guild.Id).GetNextStream());
+                }catch{ await Context.Message.ReplyAsync("something went wrong :/");  }
 
-                bool songPlaying = Queue.GetCurrentQueue().GetCurrentStream() != null;
+                bool songPlaying = Queue.GetQueue(Context.Guild.Id).GetCurrentStream() != null;
 
                 // song info embed
-                var embed = new EmbedBuilder();
+                EmbedBuilder embed = new EmbedBuilder();
                 if (songPlaying) {
-                    int queueCount = Queue.GetCurrentQueue().GetCount();
+                    int queueCount = Queue.GetQueue(Context.Guild.Id).GetCount();
                     embed.Title = "song added to queue!";
                     embed.ThumbnailUrl = thumbnail;
                     embed.AddField("title", title);
@@ -129,7 +148,7 @@ namespace MikuBot.Modules.Voice
                     embed.Title = title;
                     embed.ThumbnailUrl = thumbnail;
                     embed.Description = "♬♫♪◖(●。●)◗♪♫♬";
-                    embed.AddField("channel", $"playing in {_channel.Name}!");
+                    embed.AddField("channel", $"playing in {_channels[Context.Guild.Id].Channel.Name}!");
                 }
 
                 embed.WithColor(Color.Blue);
@@ -147,15 +166,15 @@ namespace MikuBot.Modules.Voice
                         .ExecuteAsync();
                 } catch (Exception e) { Console.WriteLine(e.ToString()); }
 
-                using (var discord = _audioClient.CreatePCMStream(AudioApplication.Mixed))
+                using (var discord = _channels[Context.Guild.Id].AudioClient.CreatePCMStream(AudioApplication.Mixed))
                 {
-                    Queue.GetCurrentQueue().SetCurrentStream();
+                    Queue.GetQueue(Context.Guild.Id).SetCurrentStream();
                     try { await discord.WriteAsync(memoryStream.ToArray(), 0, (int)memoryStream.Length); }
                     finally
                     {
                         await message.DeleteAsync();
-                        Queue.GetCurrentQueue().Dequeue();
-                        Queue.GetCurrentQueue().SetCurrentStreamNull();
+                        Queue.GetQueue(Context.Guild.Id).Dequeue();
+                        Queue.GetQueue(Context.Guild.Id).SetCurrentStreamNull();
                     }
                 }
             }

@@ -28,7 +28,9 @@ namespace MikuBot.Services
         public static async Task<string> GetGuildPrefix(string id)
         {
             var response = await _client.GetAsync($"{_apiUrl}/getprefix/{id}");
-            return await response.Content.ReadAsStringAsync();
+            if (response.IsSuccessStatusCode)
+                return await response.Content.ReadAsStringAsync();
+            else return "!";
         }
         public static async Task ChangeGuildPrefix(string id, string prefix)
         {

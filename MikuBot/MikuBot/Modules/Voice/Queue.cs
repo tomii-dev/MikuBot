@@ -8,22 +8,25 @@ namespace MikuBot.Modules.Voice
 {
     class Queue
     {
-        private static Queue _currentQueue = null;
+        private static Dictionary<ulong, Queue> _queues = new Dictionary<ulong, Queue>();
         private Queue<IStreamInfo> _queue;
         private IStreamInfo currentStream = null;
         private IStreamInfo nextStream = null;
-        public Queue()
+        
+        public Queue(ulong guildId)
         {
             _queue = new Queue<IStreamInfo>();
+            _queues.Add(guildId, this);
+        }
+
+        public static bool QueueExists(ulong guildId)
+        {
+            return _queues.ContainsKey(guildId);
         }
 
         public void AddStream(IStreamInfo stream)
         {
-            try
-            {
-                _queue.Enqueue(stream);
-                Console.WriteLine(_queue.Peek().ToString());
-            }catch(Exception e) { Console.WriteLine(e.ToString()); }
+            _queue.Enqueue(stream);
         }
 
         public bool IsEmpty()
@@ -59,13 +62,10 @@ namespace MikuBot.Modules.Voice
         {
             return _queue.Count;
         }
-        public static void SetCurrentQueue(Queue queue)
+        
+        public static Queue GetQueue(ulong guildId)
         {
-            _currentQueue = queue;
-        }
-        public static Queue GetCurrentQueue()
-        {
-            return _currentQueue;
+            return _queues[guildId];
         }
     }
 }
