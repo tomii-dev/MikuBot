@@ -104,7 +104,6 @@ namespace MikuBot.Modules.Voice
         [Command("play", RunMode=RunMode.Async)]
         public async Task Play([Remainder]string searchCriteria)
         {
-            Console.WriteLine("mhm");
             VideoSearch items = new VideoSearch();
             VideoSearchComponents video = items.GetVideos(searchCriteria, 1).Result[0];
             string url = video.getUrl();
