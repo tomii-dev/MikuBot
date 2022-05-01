@@ -12,11 +12,17 @@ namespace MikuBot.Modules.Voice
         private Queue<IStreamInfo> _queue;
         private IStreamInfo currentStream = null;
         private IStreamInfo nextStream = null;
-        
+        private ulong _guildId;
+
         public Queue(ulong guildId)
         {
             _queue = new Queue<IStreamInfo>();
+            _guildId = guildId;
             _queues.Add(guildId, this);
+        }
+        public static Queue GetQueue(ulong guildId)
+        {
+            return _queues[guildId];
         }
 
         public static bool QueueExists(ulong guildId)
@@ -46,7 +52,13 @@ namespace MikuBot.Modules.Voice
 
         public void SetCurrentStream()
         {
+            Console.WriteLine("jdfhgjidfjgi");
             currentStream = _queue.Peek();
+        }
+
+        public void Destroy()
+        {
+            _queues.Remove(_guildId);
         }
 
         public void SetCurrentStreamNull()
@@ -61,11 +73,6 @@ namespace MikuBot.Modules.Voice
         public int GetCount()
         {
             return _queue.Count;
-        }
-        
-        public static Queue GetQueue(ulong guildId)
-        {
-            return _queues[guildId];
         }
     }
 }
