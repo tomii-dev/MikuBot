@@ -64,6 +64,7 @@ namespace MikuBot.Services
             await _commands.AddModuleAsync<Utility>(_services);
             await _commands.AddModuleAsync<Voice>(_services);
             await _commands.AddModuleAsync<Economy>(_services);
+            await _commands.AddModuleAsync<Misc>(_services);
         }
     }
 }
